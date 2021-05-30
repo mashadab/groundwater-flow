@@ -73,8 +73,8 @@ rgbImage1 = read(vid,frame);
 
 %find the drop location now
 rgbImage = imcrop(rgbImage1,crop_drop);
+rgbImage_col=rgbImage;
 rgbImage=rgb2gray(rgbImage);
-
 
 figure()
 imshow(rgbImage)
@@ -93,6 +93,7 @@ title('Original Image (left) vs. Corrected Image (right)');
 
 
 %% Step #2 Threshold
+rgbImage(rgbImage < 40)=120;  %Getting rid of grids
 im_thresh = rgbImage < threshold;
 figure()
 imshow(im_thresh)
@@ -100,14 +101,29 @@ imshow(im_thresh)
 %% Step #3 Finding the surface
 n=1;
 k = ones(size(im_thresh,2),1);
+Ii = ones(size(im_thresh,2),1);
 while n < size(im_thresh,2)+1
     [M,I] = max(im_thresh(:,n));
+    I = sort(I,'descend');
+    I
+    %{
+    for i=1:size(I)-5    %Checking the thickness of the white region to discard the grids 
+        if (I(i)+1==I(i+1)&&I(i)+2==I(i+2)&&I(i)+3==I(i+3)&&I(i)+4==I(i+4))
+            Ii(n) = I(i);
+            Ii(n)
+            break;
+        end
+    end
+    %}
+    Ii(Ii<5)=1;
     k(n) = max(I);
-    if k(n)<5 k(n)=nan end %Naive approach to remove grid 
-    Im(row1:row2, column1:column2, :) = [255,0,0]; % or [255,255,255] if that doesn't work.
+    %if k(n)<5; k(n)=nan; end; %Naive approach to remove grid 
+    rgbImage_col(k(n), n,:) = [255,0,0]; % or [255,255,255] if that doesn't work.
     n = n + 1;
 end
 
+figure()
+imshow(rgbImage_col)
 
 %% Step #4 Ignore the grid lines
 
