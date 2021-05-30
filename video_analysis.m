@@ -1,9 +1,9 @@
-% Calculating the characteristics of a moving drop captured using a moving camera
+% Calculating the characteristics of a groundwater flow using a fixed camera
 % Code finds the number on the ruler using template matching (normxcorr2 algorithm), references the frame accordingly
 % Code finds the drop and evaluates its characterstics considering parallax correction 
 % Written by: Mohammad Afzal Shadab
-% Last edited: May 11th, 2019
-% Email: afzalshadab0@yahoo.com
+% Last edited: May 29th, 2021
+% Email: mashadab@utexas.edu
 % Input: raw video 
 % Output: analysed video, datasheet
 clc; % Clear the command window.
@@ -16,11 +16,20 @@ format compact;
 fontSize = 14;
 data = []; %the data will be compiled here
 fps = 5; %frames rate (per second)
-threshold = 67; %setting the threshold of the image
-crop_ruler= [1818 10 170 1700]; %cropping the ruler region: left, top, width, height
-crop_drop=  [800 0 600 2000]; %cropping the drop region: left, top, width, height
-frame_begin = 1;  %starting frame
-frame_end = 78;  %end frame
+threshold = 85; %setting the threshold of the image
+
+%fprintf("Hi");
+
+%error('Breaking out of function1');
+
+top_height = 720;
+bottom_height = 864;
+x_origin = 38;
+x_right  = 1596;
+
+crop_drop=  [x_origin top_height (x_right - x_origin) (bottom_height - top_height)]; %cropping the drop region: left, top, width, height
+frame_begin = 4000;  %starting frame
+frame_end = 4000;  %end frame
 position_timer = [0, 50];   %position of the timer
 ii_start_thresh = 1;        %starting scale reading threshold
 ii_end_thresh = 56;         %end scale reading threshold
@@ -28,11 +37,6 @@ ii_start=   1;              %first loop beginning over the template images
 ii_end=     10;             %first loop ending over the template images
 ii_thresh = 3;              %check for ii-ii_threshold to ii+ii_threhold templates (for optimization)
 
-%Parallax referencing
-S1=0.02301496;       %Scale at normal/ruler distance (mm/pixel)
-S2=0.026954178;      %Scale at drop distance (mm/pixel)
-parallax_ref=1000.0; %Reference pixel for no parallax
-%freesurfpixel = 362;%Manually set the free surface pixel
 
 %Read template files for matching
 for ii = ii_start_thresh:ii_end_thresh
@@ -44,8 +48,8 @@ end
 
 % Read the video in a standard MATLAB color video format
 folder = fullfile('\');
-fffilename = 'Sample';
-baseFileName = sprintf('%s.avi',fffilename);
+fffilename = 'test';
+baseFileName = sprintf('%s.mp4',fffilename);
 % Get the full filename, with path prepended.
 fullFileName = fullfile(folder, baseFileName);
 if ~exist(fullFileName, 'file')
@@ -66,74 +70,55 @@ vid.NumberOfFrames
  for frame = frame_begin:frame_end %vid.NumberOfFrames;
 all = [0 0 0 0]; %initializing the matrix with all the data
 rgbImage1 = read(vid,frame);
-rgbImage = imcrop(rgbImage1, crop_ruler);
-% Get the dimensions of the image.  numberOfColorBands should be = 3.
-[rows, columns, numberOfColorBands] = size(rgbImage);
-for ii = ii_start:ii_end
-
-  smallSubImage= TemplateImage(:,:,:,ii);
-
-%smallSubImage = imread('D:\Research\MIT Research\Rheometer data\Image\1.png');
-% Get the dimensions of the image.  numberOfColorBands should be = 3.
-[rows, columns, numberOfColorBands] = size(smallSubImage);
-
-% Ask user which channel (red, green, or blue) to search for a match.
-% channelToCorrelate = menu('Correlate which color channel?', 'Red', 'Green', 'Blue');
-% It actually finds the same location no matter what channel you pick, 
-% for this image anyway, so let's just go with red (channel #1).
-% Note: If you want, you can get the template from every color channel and search for it in every color channel,
-% then take the average of the found locations to get the overall best location.
-channelToCorrelate = 1;  % Use the red channel.
-correlationOutput = normxcorr2(smallSubImage(:,:,1), rgbImage(:,:, channelToCorrelate));
-%subplot(2, 2, 3);
-%imshow(correlationOutput, []);
-%axis on;
-% Get the dimensions of the image.  numberOfColorBands should be = 1.
-[rows, columns, numberOfColorBands] = size(correlationOutput);
-
-% Find out where the normalized cross correlation image is brightest.
-[maxCorrValue, maxIndex] = max(abs(correlationOutput(:)));
-[yPeak, xPeak] = ind2sub(size(correlationOutput),maxIndex(1));
-% Because cross correlation increases the size of the image, 
-% we need to shift back to find out where it would be in the original image.
-corr_offset = [(xPeak-size(smallSubImage,2)) (yPeak-size(smallSubImage,1))];
-
-if (maxCorrValue>all(2) && corr_offset(2)>0) %Highest correlation template found in the image
-    all = [ii maxCorrValue corr_offset(1) corr_offset(2) 100 1];
-end
-end
-ii = all(1); 
-
-%taking full image
-crop_rulernew=crop_ruler;
-crop_rulernew(4)=crop_rulernew(4)+300;
-rgbImage = imcrop(rgbImage1, crop_rulernew);
-
-%find the reference pixel on the scale
-k=1000.0;
-for i=all(4)+120:all(4)+200 %loop below the image
-if rgbImage(i,all(3)+1,1)<k %all(3) is the x coordinate of bounding box
-     y_ref = i;
-     k = rgbImage(i,all(3),1);
-end
-end
 
 %find the drop location now
 rgbImage = imcrop(rgbImage1,crop_drop);
 rgbImage=rgb2gray(rgbImage);
-%// Step #1 Threshold
+
+
+figure()
+imshow(rgbImage)
+
+%% Step 1 Get Undistorted image
+%Removing the distortion due to curvature effects of the camera
+%Needs calibration
+% URL: https://www.mathworks.com/help/vision/ug/remove-distortion-from-an-image-using-the-cameraparameters-object.html
+% Better URL: https://conservancy.umn.edu/bitstream/handle/11299/173817/cameraParameters%20class.pdf?sequence=12&isAllowed=y
+IntrinsicMatrix = [715.2699 0 0; 0 711.5281 0; 565.6995 355.3466 1];
+radialDistortion = [-0.3361 0.0921]; 
+cameraParams = cameraParameters('IntrinsicMatrix',IntrinsicMatrix,'RadialDistortion',radialDistortion); 
+J = undistortImage(rgbImage,cameraParams);
+figure; imshowpair(imresize(rgbImage,0.5),imresize(J,0.5),'montage');
+title('Original Image (left) vs. Corrected Image (right)');
+
+
+%% Step #2 Threshold
 im_thresh = rgbImage < threshold;
-interface = 0;
-%// Find the interface if the scale value is less than 8cm
-if ii<8;
-    for j = 1:2000;
-        if mean(im_thresh(j,:))>=0.4;
-            im_thresh(1:j,:)=0;
-            interface =1;
-        end
-    end
+figure()
+imshow(im_thresh)
+
+%% Step #3 Finding the surface
+n=1;
+k = ones(size(im_thresh,2),1);
+while n < size(im_thresh,2)+1
+    [M,I] = max(im_thresh(:,n));
+    k(n) = max(I);
+    if k(n)<5 k(n)=nan end %Naive approach to remove grid 
+    Im(row1:row2, column1:column2, :) = [255,0,0]; % or [255,255,255] if that doesn't work.
+    n = n + 1;
 end
 
+
+%% Step #4 Ignore the grid lines
+
+
+ end
+ 
+ 
+ 
+ 
+
+%{
 %// Step #3 Find regions of drops
 rp = regionprops(im_thresh, 'BoundingBox', 'Area');
 
@@ -300,3 +285,4 @@ data_table = array2table(data,'VariableNames',{'Time_s', ...
  
  Data_result= sprintf('%s.mat',fffilename);
  save(Data_result,'data_table')
+%}
