@@ -28,7 +28,7 @@ x_origin = 38;
 x_right  = 1596;
 
 crop_drop=  [x_origin top_height (x_right - x_origin) (bottom_height - top_height)]; %cropping the drop region: left, top, width, height
-frame_begin = 4000;  %starting frame
+frame_begin = 120;  %starting frame
 frame_end = 4000;  %end frame
 position_timer = [0, 50];   %position of the timer
 ii_start_thresh = 1;        %starting scale reading threshold
@@ -76,8 +76,8 @@ rgbImage = imcrop(rgbImage1,crop_drop);
 rgbImage_col=rgbImage;
 rgbImage=rgb2gray(rgbImage);
 
-figure()
-imshow(rgbImage)
+%figure()
+%imshow(rgbImage)
 
 %% Step 1 Get Undistorted image
 %Removing the distortion due to curvature effects of the camera
@@ -88,15 +88,15 @@ IntrinsicMatrix = [715.2699 0 0; 0 711.5281 0; 565.6995 355.3466 1];
 radialDistortion = [-0.3361 0.0921]; 
 cameraParams = cameraParameters('IntrinsicMatrix',IntrinsicMatrix,'RadialDistortion',radialDistortion); 
 J = undistortImage(rgbImage,cameraParams);
-figure; imshowpair(imresize(rgbImage,0.5),imresize(J,0.5),'montage');
-title('Original Image (left) vs. Corrected Image (right)');
+%figure; imshowpair(imresize(rgbImage,0.5),imresize(J,0.5),'montage');
+%title('Original Image (left) vs. Corrected Image (right)');
 
 
 %% Step #2 Threshold
-rgbImage(rgbImage < 72)= 120;  %Getting rid of grids
+rgbImage(rgbImage < 73)= 120;  %Getting rid of grids
 im_thresh = rgbImage < threshold;
-figure()
-imshow(im_thresh)
+%figure()
+%imshow(im_thresh)
 
 %% Step #3 Finding the surface
 n=1;
@@ -105,7 +105,7 @@ Ii = ones(size(im_thresh,2),1);
 while n < size(im_thresh,2)+1
     [M,I] = max(im_thresh(:,n));
     I = sort(I,'descend');
-    I
+    
     %{
     for i=1:size(I)-5    %Checking the thickness of the white region to discard the grids 
         if (I(i)+1==I(i+1)&&I(i)+2==I(i+2)&&I(i)+3==I(i+3)&&I(i)+4==I(i+4))
@@ -122,18 +122,45 @@ while n < size(im_thresh,2)+1
     n = n + 1;
 end
 
-figure()
-imshow(rgbImage_col)
 
-%% Step #4 Ignore the grid lines
+%// Step #3 Find regions of drops
+%rp = regionprops(im_thresh, 'BoundingBox', 'Area');
 
+figure('Visible','Off')
+% Enlarge figure to full screen.
+set(gcf, 'units','normalized','outerposition',[0, 0, 1, 1]);
+subplot(1,1,1)
+text_str = ['Time: ' num2str((frame-frame_begin)/fps,'%0.2f') 's'];
+timer_img = insertText(rgbImage_col,position_timer,text_str,'FontSize',50,'BoxOpacity',0.0,'TextColor','white');
+%imshow(rgbImage_col)
+hold on
+imshow(timer_img)
+% Enlarge figure to full screen.
+set(gcf, 'units','normalized','outerposition',[0, 0, 1, 1]);
+F(frame) = getframe(gcf) ;
+hold on
+
+drawnow
+hold off
 
  end
- 
- 
- 
- 
 
+% create the video writer with fps of the original video
+ Data_result= sprintf('%s_analyzed.avi',fffilename);
+  writerObj = VideoWriter(Data_result);
+  writerObj.FrameRate = fps; % set the seconds per image
+  open(writerObj); % open the video writer
+% write the frames to the video
+for i=frame_begin:frame_end
+    % convert the image to a frame
+    frameimg = F(i) ;
+    writeVideo(writerObj, frameimg);
+end
+% close the writer object
+close(writerObj);
+close all
+ 
+ 
 %{
 %// Step #3 Find regions of drops
 rp = regionprops(im_thresh, 'BoundingBox', 'Area');
