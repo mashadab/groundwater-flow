@@ -93,7 +93,7 @@ title('Original Image (left) vs. Corrected Image (right)');
 
 
 %% Step #2 Threshold
-rgbImage(rgbImage < 40)=120;  %Getting rid of grids
+rgbImage(rgbImage < 72)= 120;  %Getting rid of grids
 im_thresh = rgbImage < threshold;
 figure()
 imshow(im_thresh)
