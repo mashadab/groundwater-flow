@@ -22,14 +22,15 @@ threshold = 85; %setting the threshold of the image
 
 %error('Breaking out of function1');
 
-top_height = 720;
-bottom_height = 864;
-x_origin = 38;
-x_right  = 1596;
+top_height = 321;
+bottom_height = 532;
+x_origin = 96;
+x_right  = 1243;
 
 crop_drop=  [x_origin top_height (x_right - x_origin) (bottom_height - top_height)]; %cropping the drop region: left, top, width, height
-frame_begin = 120;  %starting frame
-frame_end = 4000;  %end frame
+frame_begin = 3710;  %starting frame
+frame_end = 3720;   %end frame
+frame_skip = 1;
 position_timer = [0, 50];   %position of the timer
 ii_start_thresh = 1;        %starting scale reading threshold
 ii_end_thresh = 56;         %end scale reading threshold
@@ -48,8 +49,8 @@ end
 
 % Read the video in a standard MATLAB color video format
 folder = fullfile('\');
-fffilename = 'test';
-baseFileName = sprintf('%s.mp4',fffilename);
+fffilename = 'June8_1st_transient_try';
+baseFileName = sprintf('%s.mov',fffilename);
 % Get the full filename, with path prepended.
 fullFileName = fullfile(folder, baseFileName);
 if ~exist(fullFileName, 'file')
@@ -66,8 +67,13 @@ end
 vid= VideoReader(fullFileName); %read the video
 vid.NumberOfFrames
 
+rgbImage1 = read(vid,1);
+rgbImage = imcrop(rgbImage1,crop_drop);
+imshow(rgbImage)
+
+
 %starting looping over frames for analysis
- for frame = frame_begin:frame_end %vid.NumberOfFrames;
+ for frame = frame_begin:frame_skip:frame_end %vid.NumberOfFrames;
 all = [0 0 0 0]; %initializing the matrix with all the data
 rgbImage1 = read(vid,frame);
 
@@ -146,12 +152,12 @@ hold off
  end
 
 % create the video writer with fps of the original video
- Data_result= sprintf('%s_analyzed.avi',fffilename);
+ Data_result= sprintf('%s_analyzed.mov',fffilename);
   writerObj = VideoWriter(Data_result);
   writerObj.FrameRate = fps; % set the seconds per image
   open(writerObj); % open the video writer
 % write the frames to the video
-for i=frame_begin:frame_end
+for i=frame_begin:frame_skip:frame_end
     % convert the image to a frame
     frameimg = F(i) ;
     writeVideo(writerObj, frameimg);
