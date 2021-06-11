@@ -22,30 +22,17 @@ threshold = 85; %setting the threshold of the image
 
 %error('Breaking out of function1');
 
+
 top_height = 321;
 bottom_height = 532;
 x_origin = 96;
 x_right  = 1243;
 
 crop_drop=  [x_origin top_height (x_right - x_origin) (bottom_height - top_height)]; %cropping the drop region: left, top, width, height
-frame_begin = 3710;  %starting frame
-frame_end = 3720;   %end frame
+frame_begin = 4000;  %starting frame
+frame_end = 4010;   %end frame
 frame_skip = 1;
 position_timer = [0, 50];   %position of the timer
-ii_start_thresh = 1;        %starting scale reading threshold
-ii_end_thresh = 56;         %end scale reading threshold
-ii_start=   1;              %first loop beginning over the template images
-ii_end=     10;             %first loop ending over the template images
-ii_thresh = 3;              %check for ii-ii_threshold to ii+ii_threhold templates (for optimization)
-
-
-%Read template files for matching
-for ii = ii_start_thresh:ii_end_thresh
-   ffolder = fullfile('Template');
-   ffilename = sprintf('%d.png',ii);
-   fullonFileName = fullfile(ffolder, ffilename);
-   TemplateImage(:,:,:,ii) = imread(fullonFileName);
-end
 
 % Read the video in a standard MATLAB color video format
 folder = fullfile('\');
@@ -71,7 +58,11 @@ rgbImage1 = read(vid,1);
 rgbImage = imcrop(rgbImage1,crop_drop);
 imshow(rgbImage)
 
+pause(10);
 
+close(1)
+
+%{
 %starting looping over frames for analysis
  for frame = frame_begin:frame_skip:frame_end %vid.NumberOfFrames;
 all = [0 0 0 0]; %initializing the matrix with all the data
@@ -85,6 +76,7 @@ rgbImage=rgb2gray(rgbImage);
 %figure()
 %imshow(rgbImage)
 
+%{
 %% Step 1 Get Undistorted image
 %Removing the distortion due to curvature effects of the camera
 %Needs calibration
@@ -96,7 +88,7 @@ cameraParams = cameraParameters('IntrinsicMatrix',IntrinsicMatrix,'RadialDistort
 J = undistortImage(rgbImage,cameraParams);
 %figure; imshowpair(imresize(rgbImage,0.5),imresize(J,0.5),'montage');
 %title('Original Image (left) vs. Corrected Image (right)');
-
+%}
 
 %% Step #2 Threshold
 rgbImage(rgbImage < 73)= 120;  %Getting rid of grids
@@ -139,16 +131,13 @@ subplot(1,1,1)
 text_str = ['Time: ' num2str((frame-frame_begin)/fps,'%0.2f') 's'];
 timer_img = insertText(rgbImage_col,position_timer,text_str,'FontSize',50,'BoxOpacity',0.0,'TextColor','white');
 %imshow(rgbImage_col)
-hold on
 imshow(timer_img)
+hold on
 % Enlarge figure to full screen.
 set(gcf, 'units','normalized','outerposition',[0, 0, 1, 1]);
 F(frame) = getframe(gcf) ;
-hold on
-
-drawnow
 hold off
-
+drawnow
  end
 
 % create the video writer with fps of the original video
@@ -165,7 +154,6 @@ end
 % close the writer object
 close(writerObj);
 close all
- 
  
 %{
 %// Step #3 Find regions of drops
@@ -334,4 +322,5 @@ data_table = array2table(data,'VariableNames',{'Time_s', ...
  
  Data_result= sprintf('%s.mat',fffilename);
  save(Data_result,'data_table')
+%}
 %}
