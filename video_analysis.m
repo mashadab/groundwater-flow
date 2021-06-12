@@ -29,9 +29,9 @@ x_origin = 96;
 x_right  = 1243;
 
 crop_drop=  [x_origin top_height (x_right - x_origin) (bottom_height - top_height)]; %cropping the drop region: left, top, width, height
-frame_begin = 4000;  %starting frame
-frame_end = 4010;   %end frame
-frame_skip = 1;
+frame_begin = 3000;  %starting frame
+frame_end = 4000;   %end frame
+frame_skip = 10;
 position_timer = [0, 50];   %position of the timer
 
 % Read the video in a standard MATLAB color video format
@@ -140,7 +140,7 @@ end
 %// Step #3 Find regions of drops
 %rp = regionprops(im_thresh, 'BoundingBox', 'Area');
 
-figure('Visible','On')
+figure('Visible','Off')
 % Enlarge figure to full screen.
 set(gcf, 'units','normalized','outerposition',[0, 0, 1, 1]);
 subplot(1,1,1)
