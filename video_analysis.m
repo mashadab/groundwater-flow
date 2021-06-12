@@ -16,7 +16,7 @@ format compact;
 fontSize = 14;
 data = []; %the data will be compiled here
 fps = 5; %frames rate (per second)
-threshold = 85; %setting the threshold of the image
+threshold = 70; %setting the threshold of the image
 
 %fprintf("Hi");
 
@@ -24,7 +24,7 @@ threshold = 85; %setting the threshold of the image
 
 
 top_height = 321;
-bottom_height = 532;
+bottom_height = 543;
 x_origin = 96;
 x_right  = 1243;
 
@@ -56,25 +56,20 @@ vid.NumberOfFrames
 
 rgbImage1 = read(vid,1);
 rgbImage = imcrop(rgbImage1,crop_drop);
-imshow(rgbImage)
+grayImg_main  = rgb2gray(rgbImage);
 
-pause(10);
-
-close(1)
-
-%{
 %starting looping over frames for analysis
- for frame = frame_begin:frame_skip:frame_end %vid.NumberOfFrames;
+ for frame = frame_begin:frame_begin%frame_skip:frame_end %vid.NumberOfFrames;
 all = [0 0 0 0]; %initializing the matrix with all the data
 rgbImage1 = read(vid,frame);
 
 %find the drop location now
 rgbImage = imcrop(rgbImage1,crop_drop);
 rgbImage_col=rgbImage;
-rgbImage=rgb2gray(rgbImage);
-
-%figure()
-%imshow(rgbImage)
+bwImage=rgb2gray(rgbImage);
+imshow(rgbImage)
+figure()
+imshow(rgbImage)
 
 %{
 %% Step 1 Get Undistorted image
@@ -91,32 +86,41 @@ J = undistortImage(rgbImage,cameraParams);
 %}
 
 %% Step #2 Threshold
-rgbImage(rgbImage < 73)= 120;  %Getting rid of grids
-im_thresh = rgbImage < threshold;
-%figure()
-%imshow(im_thresh)
+grayImage=rgb2gray(rgbImage);
+%grayImage(grayImage < 30)= 255;  %Getting rid of grids
+%bwImage(bwImage < 70)= 0;
+%bwImage(bwImage >= 70)= 255;
+grayImage = 255 - grayImage;
+bwImage = im2bw(grayImage,1-70/255);
+%im_thresh = rgbImage < threshold;
+figure()
+imshow(bwImage)
+
+
 
 %% Step #3 Finding the surface
 n=1;
-k = ones(size(im_thresh,2),1);
-Ii = ones(size(im_thresh,2),1);
-while n < size(im_thresh,2)+1
-    [M,I] = max(im_thresh(:,n));
-    I = sort(I,'descend');
-    
-    %{
-    for i=1:size(I)-5    %Checking the thickness of the white region to discard the grids 
-        if (I(i)+1==I(i+1)&&I(i)+2==I(i+2)&&I(i)+3==I(i+3)&&I(i)+4==I(i+4))
-            Ii(n) = I(i);
-            Ii(n)
-            break;
+k = ones(size(bwImage,2),1);
+Ii = ones(size(bwImage,2),1);
+while n < size(bwImage,2)+1
+    I = find(bwImage(:,n));
+    %I = sort(I,'descend');
+    if (size(I,1) > 10)
+        for i=1:size(I,1)-5    %Checking the thickness of the white region to discard the grids 
+            if (I(i)+1==I(i+1)&&I(i)+2==I(i+2)&&I(i)+3==I(i+3)&&I(i)+4==I(i+4)&&I(i)+5==I(i+5)&&I(i)+6==I(i+6))
+                Ii(n) = I(i)
+                'working'
+                break;
+            else 
+                Ii(n)=1;
+            end
         end
     end
-    %}
-    Ii(Ii<5)=1;
-    k(n) = max(I);
+    Ii(Ii<3)=1;
+    %k(n) = max(I);
+    
     %if k(n)<5; k(n)=nan; end; %Naive approach to remove grid 
-    rgbImage_col(k(n), n,:) = [255,0,0]; % or [255,255,255] if that doesn't work.
+    rgbImage_col(Ii(n), n,:) = [255,0,0]; % or [255,255,255] if that doesn't work.
     n = n + 1;
 end
 
@@ -124,7 +128,7 @@ end
 %// Step #3 Find regions of drops
 %rp = regionprops(im_thresh, 'BoundingBox', 'Area');
 
-figure('Visible','Off')
+figure('Visible','On')
 % Enlarge figure to full screen.
 set(gcf, 'units','normalized','outerposition',[0, 0, 1, 1]);
 subplot(1,1,1)
@@ -140,6 +144,7 @@ hold off
 drawnow
  end
 
+%{
 % create the video writer with fps of the original video
  Data_result= sprintf('%s_analyzed.mov',fffilename);
   writerObj = VideoWriter(Data_result);
@@ -154,6 +159,10 @@ end
 % close the writer object
 close(writerObj);
 close all
+
+%}
+ 
+ 
  
 %{
 %// Step #3 Find regions of drops
@@ -323,4 +332,4 @@ data_table = array2table(data,'VariableNames',{'Time_s', ...
  Data_result= sprintf('%s.mat',fffilename);
  save(Data_result,'data_table')
 %}
-%}
+ 

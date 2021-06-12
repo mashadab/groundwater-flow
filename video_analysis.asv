@@ -16,40 +16,28 @@ format compact;
 fontSize = 14;
 data = []; %the data will be compiled here
 fps = 5; %frames rate (per second)
-threshold = 85; %setting the threshold of the image
+threshold = 70; %setting the threshold of the image
 
 %fprintf("Hi");
 
 %error('Breaking out of function1');
 
-top_height = 720;
-bottom_height = 864;
-x_origin = 38;
-x_right  = 1596;
+
+top_height = 321;
+bottom_height = 543;
+x_origin = 96;
+x_right  = 1243;
 
 crop_drop=  [x_origin top_height (x_right - x_origin) (bottom_height - top_height)]; %cropping the drop region: left, top, width, height
 frame_begin = 4000;  %starting frame
-frame_end = 4000;  %end frame
+frame_end = 4010;   %end frame
+frame_skip = 1;
 position_timer = [0, 50];   %position of the timer
-ii_start_thresh = 1;        %starting scale reading threshold
-ii_end_thresh = 56;         %end scale reading threshold
-ii_start=   1;              %first loop beginning over the template images
-ii_end=     10;             %first loop ending over the template images
-ii_thresh = 3;              %check for ii-ii_threshold to ii+ii_threhold templates (for optimization)
-
-
-%Read template files for matching
-for ii = ii_start_thresh:ii_end_thresh
-   ffolder = fullfile('Template');
-   ffilename = sprintf('%d.png',ii);
-   fullonFileName = fullfile(ffolder, ffilename);
-   TemplateImage(:,:,:,ii) = imread(fullonFileName);
-end
 
 % Read the video in a standard MATLAB color video format
 folder = fullfile('\');
-fffilename = 'test';
-baseFileName = sprintf('%s.mp4',fffilename);
+fffilename = 'June8_1st_transient_try';
+baseFileName = sprintf('%s.mov',fffilename);
 % Get the full filename, with path prepended.
 fullFileName = fullfile(folder, baseFileName);
 if ~exist(fullFileName, 'file')
@@ -66,19 +54,24 @@ end
 vid= VideoReader(fullFileName); %read the video
 vid.NumberOfFrames
 
+rgbImage1 = read(vid,1);
+rgbImage = imcrop(rgbImage1,crop_drop);
+grayImg_main  = rgb2gray(rgbImage);
+
 %starting looping over frames for analysis
- for frame = frame_begin:frame_end %vid.NumberOfFrames;
+ for frame = frame_begin:frame_begin%frame_skip:frame_end %vid.NumberOfFrames;
 all = [0 0 0 0]; %initializing the matrix with all the data
 rgbImage1 = read(vid,frame);
 
 %find the drop location now
 rgbImage = imcrop(rgbImage1,crop_drop);
 rgbImage_col=rgbImage;
-rgbImage=rgb2gray(rgbImage);
-
+bwImage=rgb2gray(rgbImage);
+imshow(rgbImage)
 figure()
 imshow(rgbImage)
 
+%{
 %% Step 1 Get Undistorted image
 %Removing the distortion due to curvature effects of the camera
 %Needs calibration
@@ -88,64 +81,85 @@ IntrinsicMatrix = [715.2699 0 0; 0 711.5281 0; 565.6995 355.3466 1];
 radialDistortion = [-0.3361 0.0921]; 
 cameraParams = cameraParameters('IntrinsicMatrix',IntrinsicMatrix,'RadialDistortion',radialDistortion); 
 J = undistortImage(rgbImage,cameraParams);
-figure; imshowpair(imresize(rgbImage,0.5),imresize(J,0.5),'montage');
-title('Original Image (left) vs. Corrected Image (right)');
-
+%figure; imshowpair(imresize(rgbImage,0.5),imresize(J,0.5),'montage');
+%title('Original Image (left) vs. Corrected Image (right)');
+%}
 
 %% Step #2 Threshold
-rgbImage(rgbImage < 73)= 120;  %Getting rid of grids
-im_thresh = rgbImage < threshold;
+grayImage=rgb2gray(rgbImage);
+%grayImage(grayImage < 30)= 255;  %Getting rid of grids
+%bwImage(bwImage < 70)= 0;
+%bwImage(bwImage >= 70)= 255;
+grayImage = 255 - grayImage;
+bwImage = im2bw(grayImage,1-70/255);
+%im_thresh = rgbImage < threshold;
 figure()
-imshow(im_thresh)
+imshow(bwImage)
+
+
 
 %% Step #3 Finding the surface
 n=1;
-k = ones(size(im_thresh,2),1);
-Ii = ones(size(im_thresh,2),1);
-while n < size(im_thresh,2)+1
-    [M,I] = max(im_thresh(:,n));
-    I = sort(I,'descend');
-    I
-    %{
-    for i=1:size(I)-5    %Checking the thickness of the white region to discard the grids 
-        if (I(i)+1==I(i+1)&&I(i)+2==I(i+2)&&I(i)+3==I(i+3)&&I(i)+4==I(i+4))
-            Ii(n) = I(i);
-            Ii(n)
-            break;
+k = ones(size(bwImage,2),1);
+Ii = ones(size(bwImage,2),1);
+while n < size(bwImage,2)+1
+    I = find(bwImage(:,n));
+    %I = sort(I,'descend');
+    if (i > 10)
+        for i=1:size(I)-5    %Checking the thickness of the white region to discard the grids 
+            if (I(i)+1==I(i+1)&&I(i)+2==I(i+2)&&I(i)+3==I(i+3)&&I(i)+4==I(i+4)&&I(i)+5==I(i+5)&&I(i)+6==I(i+6))
+                Ii(n) = I(i);
+                Ii(n)
+                break;
+            else 
+                
+            end
         end
     end
-    %}
-    Ii(Ii<5)=1;
-    k(n) = max(I);
+    Ii(Ii<3)=1;
+    %k(n) = max(I);
+    
     %if k(n)<5; k(n)=nan; end; %Naive approach to remove grid 
-    rgbImage_col(k(n), n,:) = [255,0,0]; % or [255,255,255] if that doesn't work.
+    rgbImage_col(Ii, n,:) = [255,0,0]; % or [255,255,255] if that doesn't work.
     n = n + 1;
 end
 
 
 %// Step #3 Find regions of drops
-rp = regionprops(im_thresh, 'BoundingBox', 'Area');
+%rp = regionprops(im_thresh, 'BoundingBox', 'Area');
 
-figure('Visible','Off')
+figure('Visible','On')
 % Enlarge figure to full screen.
 set(gcf, 'units','normalized','outerposition',[0, 0, 1, 1]);
 subplot(1,1,1)
 text_str = ['Time: ' num2str((frame-frame_begin)/fps,'%0.2f') 's'];
-timer_img = insertText(rgbImage1,position_timer,text_str,'FontSize',100,'BoxOpacity',0.0,'TextColor','black');
+timer_img = insertText(rgbImage_col,position_timer,text_str,'FontSize',50,'BoxOpacity',0.0,'TextColor','white');
+%imshow(rgbImage_col)
 imshow(timer_img)
+hold on
 % Enlarge figure to full screen.
 set(gcf, 'units','normalized','outerposition',[0, 0, 1, 1]);
 F(frame) = getframe(gcf) ;
-hold on
-
-drawnow
 hold off
- 
- 
- 
-
+drawnow
  end
- %{
+ 
+% create the video writer with fps of the original video
+ Data_result= sprintf('%s_analyzed.mov',fffilename);
+  writerObj = VideoWriter(Data_result);
+  writerObj.FrameRate = fps; % set the seconds per image
+  open(writerObj); % open the video writer
+% write the frames to the video
+for i=frame_begin:frame_skip:frame_end
+    % convert the image to a frame
+    frameimg = F(i) ;
+    writeVideo(writerObj, frameimg);
+end
+% close the writer object
+close(writerObj);
+close all
+ 
+%{
 %// Step #3 Find regions of drops
 rp = regionprops(im_thresh, 'BoundingBox', 'Area');
 
@@ -313,3 +327,4 @@ data_table = array2table(data,'VariableNames',{'Time_s', ...
  Data_result= sprintf('%s.mat',fffilename);
  save(Data_result,'data_table')
 %}
+ 
