@@ -15,7 +15,7 @@ format long g;
 format compact;
 fontSize = 14;
 data = []; %the data will be compiled here
-fps = 5; %frames rate (per second)
+fps = 60; %frames rate (per second)
 threshold = 70; %setting the threshold of the image
 
 %fprintf("Hi");
@@ -59,7 +59,7 @@ rgbImage = imcrop(rgbImage1,crop_drop);
 grayImg_main  = rgb2gray(rgbImage);
 
 %starting looping over frames for analysis
- for frame = frame_begin:frame_begin%frame_skip:frame_end %vid.NumberOfFrames;
+ for frame = frame_begin:frame_skip:frame_end %vid.NumberOfFrames;
 all = [0 0 0 0]; %initializing the matrix with all the data
 rgbImage1 = read(vid,frame);
 
@@ -67,9 +67,9 @@ rgbImage1 = read(vid,frame);
 rgbImage = imcrop(rgbImage1,crop_drop);
 rgbImage_col=rgbImage;
 bwImage=rgb2gray(rgbImage);
-imshow(rgbImage)
-figure()
-imshow(rgbImage)
+
+%figure()
+%imshow(rgbImage)
 
 %{
 %% Step 1 Get Undistorted image
@@ -87,14 +87,11 @@ J = undistortImage(rgbImage,cameraParams);
 
 %% Step #2 Threshold
 grayImage=rgb2gray(rgbImage);
-%grayImage(grayImage < 30)= 255;  %Getting rid of grids
-%bwImage(bwImage < 70)= 0;
-%bwImage(bwImage >= 70)= 255;
 grayImage = 255 - grayImage;
 bwImage = im2bw(grayImage,1-70/255);
-%im_thresh = rgbImage < threshold;
-figure()
-imshow(bwImage)
+
+%figure()
+%imshow(bwImage)
 
 
 
@@ -109,7 +106,7 @@ while n < size(bwImage,2)+1
     if (size(I,1) > 10)
         for i=1:size(I,1)-5    %Checking the thickness of the white region to discard the grids 
             if (I(i)+1==I(i+1)&&I(i)+2==I(i+2)&&I(i)+3==I(i+3)&&I(i)+4==I(i+4)&&I(i)+5==I(i+5)&&I(i)+6==I(i+6))
-                Ii(n) = I(i)
+                Ii(n) = I(i);
                 break;
             else 
                 Ii(n)=1;
@@ -143,7 +140,7 @@ end
 %// Step #3 Find regions of drops
 %rp = regionprops(im_thresh, 'BoundingBox', 'Area');
 
-figure('Visible','Off')
+figure('Visible','On')
 % Enlarge figure to full screen.
 set(gcf, 'units','normalized','outerposition',[0, 0, 1, 1]);
 subplot(1,1,1)
@@ -159,23 +156,22 @@ hold off
 drawnow
  end
 
-%{
 % create the video writer with fps of the original video
  Data_result= sprintf('%s_analyzed.mov',fffilename);
   writerObj = VideoWriter(Data_result);
   writerObj.FrameRate = fps; % set the seconds per image
   open(writerObj); % open the video writer
 % write the frames to the video
+
 for i=frame_begin:frame_skip:frame_end
     % convert the image to a frame
     frameimg = F(i) ;
     writeVideo(writerObj, frameimg);
 end
+
 % close the writer object
 close(writerObj);
 close all
-
-%}
  
  
  
