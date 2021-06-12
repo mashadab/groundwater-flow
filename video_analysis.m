@@ -102,6 +102,7 @@ imshow(bwImage)
 n=1;
 k = ones(size(bwImage,2),1);
 Ii = ones(size(bwImage,2),1);
+Ib = ones(size(bwImage,2),1);
 while n < size(bwImage,2)+1
     I = find(bwImage(:,n));
     %I = sort(I,'descend');
@@ -109,26 +110,40 @@ while n < size(bwImage,2)+1
         for i=1:size(I,1)-5    %Checking the thickness of the white region to discard the grids 
             if (I(i)+1==I(i+1)&&I(i)+2==I(i+2)&&I(i)+3==I(i+3)&&I(i)+4==I(i+4)&&I(i)+5==I(i+5)&&I(i)+6==I(i+6))
                 Ii(n) = I(i)
-                'working'
                 break;
             else 
                 Ii(n)=1;
             end
+  
         end
+        
+        for i=size(I,1):-1:5    %Checking the thickness of the white region to discard the grids 
+            if (I(i)-1==I(i-1)&&I(i)-2==I(i-2)&&I(i)-3==I(i-3)&&I(i)-4==I(i-4)&&I(i)-5==I(i-5)&&I(i)-6==I(i-6))
+                Ib(n) = I(i);
+                break;
+            else 
+                Ib(n)=1;
+            end
+        end
+        
+        
     end
     Ii(Ii<3)=1;
+    %Ib(Ib<size(I,1)-100)=1;
     %k(n) = max(I);
     
     %if k(n)<5; k(n)=nan; end; %Naive approach to remove grid 
     rgbImage_col(Ii(n), n,:) = [255,0,0]; % or [255,255,255] if that doesn't work.
+    rgbImage_col(Ib(n), n,:) = [0,255,0];
     n = n + 1;
+    
 end
 
 
 %// Step #3 Find regions of drops
 %rp = regionprops(im_thresh, 'BoundingBox', 'Area');
 
-figure('Visible','On')
+figure('Visible','Off')
 % Enlarge figure to full screen.
 set(gcf, 'units','normalized','outerposition',[0, 0, 1, 1]);
 subplot(1,1,1)
