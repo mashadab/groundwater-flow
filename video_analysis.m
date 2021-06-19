@@ -137,7 +137,7 @@ while n < size(bwImage,2)+1
     
 end
 
-height(ii,:) = Ib - Ii;
+height(ii,:) = Ib - Ii+1;
 time(ii) = (frame-frame_begin)/fps;
 
 %// Step #3 Find regions of drops
