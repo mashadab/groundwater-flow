@@ -137,10 +137,6 @@ while n < size(bwImage,2)+1
     
 end
 
-
-
-x     = linspace(1,size(height,2));
-x     = (x-1)*scale;
 height(ii,:) = (Ib - Ii+1)*scale;
 time(ii) = (frame-frame_begin)/fps;
 
@@ -184,4 +180,4 @@ close(writerObj);
 close all
 
 outputfilename = append(fffilename,'_analysed','.mat');
-save(outputfilename,'height','x','time');
+save(outputfilename,'height','time');

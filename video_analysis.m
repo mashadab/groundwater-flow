@@ -18,16 +18,16 @@ data = []; %the data will be compiled here
 fps = 60; %frames rate (per second)
 threshold = 70; %setting the threshold of the image
 
-
 %Manually setting the region of importance
 top_height = 321;
 bottom_height = 543;
 x_origin = 96;
 x_right  = 1243;
+scale = 150/(1123 - 73+1);  %conversion from pixels to height in cm (cm/pixel)
 
 crop_drop=  [x_origin top_height (x_right - x_origin) (bottom_height - top_height)]; %cropping the drop region: left, top, width, height
 frame_begin = 790;  %starting frame
-frame_end = 30790;   %end frame
+frame_end = 37332;   %end frame
 frame_skip = 60;
 position_timer = [0, 50];   %position of the timer
 
@@ -137,7 +137,13 @@ while n < size(bwImage,2)+1
     
 end
 
-height(ii,:) = Ib - Ii+1;
+x     = linspace(1,size(height,2),size(height,2));
+x     = (x-1)*scale;
+height(ii,:) = (Ib - Ii+1)*scale;
+
+TF = find(isoutlier(height(ii,:)));
+height(ii,TF) = NaN;
+
 time(ii) = (frame-frame_begin)/fps;
 
 %// Step #3 Find regions of drops
@@ -180,4 +186,15 @@ close(writerObj);
 close all
 
 outputfilename = append(fffilename,'_analysed','.mat');
-save(outputfilename,'height','time');
+save(outputfilename,'height','x','time');
+
+
+
+for i=1:size(height,1)
+   plot(x,height(i,:),'r.')
+   ylim([0,40])
+   xlim([0,170])
+   xlabel('x (cm)')
+   ylabel('height (cm)')
+   pause(0.1)
+end
