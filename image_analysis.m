@@ -19,7 +19,7 @@ threshold = 40; %setting the threshold of the image
 %Manually setting the region of importance
 top_height = 323;
 bottom_height = 1125;
-x_origin = 96;
+x_origin = 320;
 x_right  = 4687;
 scale = 160/(4597-310+1);  %conversion from pixels to height in cm (cm/pixel)
 
@@ -100,7 +100,7 @@ while n < size(bwImage,2)+1
     %I = sort(I,'descend');
     if (size(I,1) > 10)
         for i=1:size(I,1)-5    %Checking the thickness of the white region to discard the grids 
-            if (I(i)+1==I(i+1)&&I(i)+2==I(i+2)&&I(i)+3==I(i+3)&&I(i)+4==I(i+4)&&I(i)+5==I(i+5)&&I(i)+6==I(i+6))
+            if (I(i)+1==I(i+1)&&I(i)+2==I(i+2)&&I(i)+3==I(i+3)&&I(i)+4==I(i+4)&&I(i)+5==I(i+5)&&I(i)+6==I(i+6)&&I(i)+7==I(i+7)&&I(i)+8==I(i+8)&&I(i)+9==I(i+9)&&I(i)+10==I(i+10)&&I(i)+11==I(i+11)&&I(i)+12==I(i+12)&&I(i)+13==I(i+13)&&I(i)+14==I(i+14))
                 Ii(n) = I(i);
                 break;
             else 
@@ -110,7 +110,7 @@ while n < size(bwImage,2)+1
         end
         
         for i=size(I,1):-1:5    %Checking the thickness of the white region to discard the grids 
-            if (I(i)-1==I(i-1)&&I(i)-2==I(i-2)&&I(i)-3==I(i-3)&&I(i)-4==I(i-4)&&I(i)-5==I(i-5)&&I(i)-6==I(i-6))
+            if (I(i)-1==I(i-1)&&I(i)-2==I(i-2)&&I(i)-3==I(i-3)&&I(i)-4==I(i-4)&&I(i)-5==I(i-5))
                 Ib(n) = I(i);
                 break;
             else 
@@ -156,8 +156,6 @@ drawnow
 
 ii = ii+1;
  end
-
-close all
 
 outputfilename = append(fffilename,'_analysed','.mat');
 save(outputfilename,'height','x');
