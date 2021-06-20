@@ -16,13 +16,21 @@ data = []; %the data will be compiled here
 fps = 60; %frames rate (per second)
 threshold = 40; %setting the threshold of the image
 
+%Hydraulic conductivity measurement
+W  = 2.54/100;%Width of the acrylic cell (m)
+K  = 0.091;   %For 0.5mm= 0.0024 m/s; 1mm=0.091 m/s; 2mm=0.0285 m/s
+h2 = 0;       %lake level (m)
+Q  = 350;     %Volumetric flow rate (mL/min)
+Q  = Q*10^(-6)/60; %converting to m^3/s
+L = (4687-320+1); %length in pixels
+
 %Manually setting the region of importance
 top_height = 323;
 bottom_height = 1125;
 x_origin = 320;
 x_right  = 4687;
 scale = 160/(4597-310+1);  %conversion from pixels to height in cm (cm/pixel)
-
+L = L*scale;
 crop_drop=  [x_origin top_height (x_right - x_origin) (bottom_height - top_height)]; %cropping the drop region: left, top, width, height
 frame_begin = 1;  %starting frame
 frame_end   = 1;   %end frame
@@ -156,13 +164,15 @@ drawnow
 
 ii = ii+1;
  end
+xexp = x/100;
+hexp = height/100;
 
 outputfilename = append(fffilename,'_analysed','.mat');
-save(outputfilename,'height','x');
+save(outputfilename,'hexp','xexp','Q','W','L','K');
 
-plot(x,height,'r.')
-ylim([0,40])
-xlim([0,170])
-xlabel('x (cm)')
-ylabel('height (cm)')
-pause(0.1)
+figure()
+plot(xexp,hexp,'r.')
+ylim([0,0.4])
+xlim([0,1.7])
+xlabel('x (m)')
+ylabel('height (m)')
