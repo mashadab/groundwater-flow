@@ -135,8 +135,8 @@ x     = linspace(1,size(height,2),size(height,2));
 x     = (x-1)*scale;
 height= (Ib - Ii+1)*scale;
 
-TF = find(isoutlier(height(ii)));
-height(ii,TF) = NaN;
+TF = find(isoutlier(height,'movmedian',100));
+height(TF) = NaN;
 
 %// Step #3 Find regions of drops
 %rp = regionprops(im_thresh, 'BoundingBox', 'Area');
@@ -159,3 +159,10 @@ ii = ii+1;
 
 outputfilename = append(fffilename,'_analysed','.mat');
 save(outputfilename,'height','x');
+
+plot(x,height,'r.')
+ylim([0,40])
+xlim([0,170])
+xlabel('x (cm)')
+ylabel('height (cm)')
+pause(0.1)
