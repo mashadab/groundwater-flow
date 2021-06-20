@@ -1,11 +1,9 @@
 % Calculating the characteristics of a groundwater flow using a fixed camera
-% Code finds the number on the ruler using template matching (normxcorr2 algorithm), references the frame accordingly
-% Code finds the drop and evaluates its characterstics considering parallax correction 
 % Written by: Mohammad Afzal Shadab
-% Last edited: May 29th, 2021
+% Last edited: June 20th, 2021
 % Email: mashadab@utexas.edu
-% Input: raw video 
-% Output: analysed video, datasheet
+% Input: raw snapshot 
+% Output: analysed image, datasheet
 clc; % Clear the command window.
 close all; % Close all figures (except those of imtool.)
 imtool close all;  % Close all imtool figures.
@@ -16,25 +14,25 @@ format compact;
 fontSize = 14;
 data = []; %the data will be compiled here
 fps = 60; %frames rate (per second)
-threshold = 70; %setting the threshold of the image
+threshold = 40; %setting the threshold of the image
 
 %Manually setting the region of importance
-top_height = 321;
-bottom_height = 543;
+top_height = 323;
+bottom_height = 1125;
 x_origin = 96;
-x_right  = 1243;
-scale = 150/(1123 - 73+1);  %conversion from pixels to height in cm (cm/pixel)
+x_right  = 4687;
+scale = 160/(4597-310+1);  %conversion from pixels to height in cm (cm/pixel)
 
 crop_drop=  [x_origin top_height (x_right - x_origin) (bottom_height - top_height)]; %cropping the drop region: left, top, width, height
-frame_begin = 790;  %starting frame
-frame_end = 30790;   %end frame
+frame_begin = 1;  %starting frame
+frame_end   = 1;   %end frame
 frame_skip = 60;
 position_timer = [0, 50];   %position of the timer
 
 % Read the video in a standard MATLAB color video format
-folder = fullfile('\');
-fffilename = 'June8_1st_transient_try';
-baseFileName = sprintf('%s.mov',fffilename);
+folder = fullfile('\Images\1mm\');
+fffilename = '350mL_per_minute_1mm_beads_8_June';
+baseFileName = sprintf('%s.jpg',fffilename);
 % Get the full filename, with path prepended.
 fullFileName = fullfile(folder, baseFileName);
 if ~exist(fullFileName, 'file')
@@ -48,21 +46,17 @@ if ~exist(fullFileName, 'file')
 	end
 end
 
-vid= VideoReader(fullFileName); %read the video
-vid.NumberOfFrames
-
-rgbImage1 = read(vid,1);
+rgbImage1 = imread(fullFileName);
 rgbImage = imcrop(rgbImage1,crop_drop);
 grayImg_main = rgb2gray(rgbImage);
 
-height = zeros(floor((frame_end-frame_begin)/frame_skip),size(grayImg_main,2));
-time   = zeros(floor((frame_end-frame_begin)/frame_skip),1);
+height = zeros(size(grayImg_main,2));
 
 %starting looping over frames for analysis
 ii = 1;
  for frame = frame_begin:frame_skip:frame_end %vid.NumberOfFrames;
 all = [0 0 0 0]; %initializing the matrix with all the data
-rgbImage1 = read(vid,frame);
+rgbImage1 = imread(fullFileName);
 
 %find the drop location now
 rgbImage = imcrop(rgbImage1,crop_drop);
@@ -89,7 +83,7 @@ J = undistortImage(rgbImage,cameraParams);
 %% Step #2 Threshold
 grayImage=rgb2gray(rgbImage);
 grayImage = 255 - grayImage;
-bwImage = im2bw(grayImage,1-70/255);
+bwImage = im2bw(grayImage,1-threshold/255);
 
 %figure()
 %imshow(bwImage)
@@ -137,20 +131,21 @@ while n < size(bwImage,2)+1
     
 end
 
-height(ii,:) = (Ib - Ii+1)*scale;
-time(ii) = (frame-frame_begin)/fps;
+x     = linspace(1,size(height,2),size(height,2));
+x     = (x-1)*scale;
+height= (Ib - Ii+1)*scale;
+
+TF = find(isoutlier(height(ii)));
+height(ii,TF) = NaN;
 
 %// Step #3 Find regions of drops
 %rp = regionprops(im_thresh, 'BoundingBox', 'Area');
 
-figure('Visible','Off')
+figure('Visible','On')
 % Enlarge figure to full screen.
 set(gcf, 'units','normalized','outerposition',[0, 0, 1, 1]);
 subplot(1,1,1)
-text_str = ['Time: ' num2str((frame-frame_begin)/fps,'%0.2f') 's'];
-timer_img = insertText(rgbImage_col,position_timer,text_str,'FontSize',50,'BoxOpacity',0.0,'TextColor','white');
-%imshow(rgbImage_col)
-imshow(timer_img)
+imshow(rgbImage_col)
 hold on
 % Enlarge figure to full screen.
 set(gcf, 'units','normalized','outerposition',[0, 0, 1, 1]);
@@ -162,22 +157,7 @@ drawnow
 ii = ii+1;
  end
 
-% create the video writer with fps of the original video
- Data_result= sprintf('%s_analyzed.mov',fffilename);
-  writerObj = VideoWriter(Data_result);
-  writerObj.FrameRate = fps; % set the seconds per image
-  open(writerObj); % open the video writer
-% write the frames to the video
-
-for i=frame_begin:frame_skip:frame_end
-    % convert the image to a frame
-    frameimg = F(i) ;
-    writeVideo(writerObj, frameimg);
-end
-
-% close the writer object
-close(writerObj);
 close all
 
 outputfilename = append(fffilename,'_analysed','.mat');
-save(outputfilename,'height','time');
+save(outputfilename,'height','x');
