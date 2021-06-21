@@ -25,9 +25,13 @@ top_height = 850;
 bottom_height = 1125;
 x_origin = 336;
 x_right  = 4680;
+scale_left = 322;
+scale_right= 4586;
+scale_length= 160; %length of the 16 boxes
+
 L = (x_right-x_origin+1); %length in pixels
 
-scale = 160/(4586-322+1);  %conversion from pixels to height in cm (cm/pixel)
+scale = scale_length/(scale_right-scale_left+1);  %conversion from pixels to height in cm (cm/pixel)
 L = L*scale;
 crop_drop=  [x_origin top_height (x_right - x_origin) (bottom_height - top_height)]; %cropping the drop region: left, top, width, height
 frame_begin = 1;  %starting frame
