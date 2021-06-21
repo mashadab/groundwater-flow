@@ -27,8 +27,8 @@ L = (4687-320+1); %length in pixels
 %Manually setting the region of importance
 top_height = 323;
 bottom_height = 1125;
-x_origin = 323;
-x_right  = 4687;
+x_origin = 343;
+x_right  = 4667;
 scale = 160/(4597-310+1);  %conversion from pixels to height in cm (cm/pixel)
 L = L*scale;
 crop_drop=  [x_origin top_height (x_right - x_origin) (bottom_height - top_height)]; %cropping the drop region: left, top, width, height

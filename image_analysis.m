@@ -20,26 +20,26 @@ threshold = 40; %setting the threshold of the image
 W  = 2.54/100;%Width of the acrylic cell (m)
 K  = 0.091;   %For 0.5mm= 0.0024 m/s; 1mm=0.091 m/s; 2mm=0.0285 m/s
 h2 = 0;       %lake level (m)
-Q  = 350;     %Volumetric flow rate (mL/min)
-Q  = Q*10^(-6)/60; %converting to m^3/s
-L = (4687-320+1); %length in pixels
-
 %Manually setting the region of importance
-top_height = 323;
+top_height = 580;
 bottom_height = 1125;
-x_origin = 320;
-x_right  = 4687;
-scale = 160/(4597-310+1);  %conversion from pixels to height in cm (cm/pixel)
+x_origin = 348;
+x_right  = 4714;
+L = (x_right-x_origin+1); %length in pixels
+
+scale = 160/(4628-340+1);  %conversion from pixels to height in cm (cm/pixel)
 L = L*scale;
 crop_drop=  [x_origin top_height (x_right - x_origin) (bottom_height - top_height)]; %cropping the drop region: left, top, width, height
 frame_begin = 1;  %starting frame
 frame_end   = 1;   %end frame
 frame_skip = 60;
-position_timer = [0, 50];   %position of the timer
+
+Q  = 175;     %Volumetric flow rate (mL/min)
+Q  = Q*10^(-6)/60; %converting to m^3/s
 
 % Read the video in a standard MATLAB color video format
 folder = fullfile('\Images\1mm\');
-fffilename = '350mL_per_minute_1mm_beads_8_June';
+fffilename = '175mL_per_minute_1mm_beads_8_June';
 baseFileName = sprintf('%s.jpg',fffilename);
 % Get the full filename, with path prepended.
 fullFileName = fullfile(folder, baseFileName);
@@ -90,6 +90,7 @@ J = undistortImage(rgbImage,cameraParams);
 
 %% Step #2 Threshold
 grayImage=rgb2gray(rgbImage);
+grayImage(grayImage<20)=255;
 grayImage = 255 - grayImage;
 bwImage = im2bw(grayImage,1-threshold/255);
 
@@ -108,7 +109,7 @@ while n < size(bwImage,2)+1
     %I = sort(I,'descend');
     if (size(I,1) > 10)
         for i=1:size(I,1)-5    %Checking the thickness of the white region to discard the grids 
-            if (I(i)+1==I(i+1)&&I(i)+2==I(i+2)&&I(i)+3==I(i+3)&&I(i)+4==I(i+4)&&I(i)+5==I(i+5)&&I(i)+6==I(i+6)&&I(i)+7==I(i+7)&&I(i)+8==I(i+8)&&I(i)+9==I(i+9)&&I(i)+10==I(i+10)&&I(i)+11==I(i+11)&&I(i)+12==I(i+12)&&I(i)+13==I(i+13)&&I(i)+14==I(i+14))
+            if (I(i)+1==I(i+1)&&I(i)+2==I(i+2)&&I(i)+3==I(i+3)&&I(i)+4==I(i+4)&&I(i)+5==I(i+5))%&&I(i)+6==I(i+6)&&I(i)+7==I(i+7)&&I(i)+8==I(i+8)&&I(i)+9==I(i+9)&&I(i)+10==I(i+10))%&&I(i)+11==I(i+11)&&I(i)+12==I(i+12)&&I(i)+13==I(i+13)&&I(i)+14==I(i+14)&&I(i)+15==I(i+15)&&I(i)+16==I(i+16))
                 Ii(n) = I(i);
                 break;
             else 
@@ -118,7 +119,7 @@ while n < size(bwImage,2)+1
         end
         
         for i=size(I,1):-1:5    %Checking the thickness of the white region to discard the grids 
-            if (I(i)-1==I(i-1)&&I(i)-2==I(i-2)&&I(i)-3==I(i-3)&&I(i)-4==I(i-4)&&I(i)-5==I(i-5))
+            if (I(i)-1==I(i-1)&&I(i)-2==I(i-2)&&I(i)-3==I(i-3))%&&I(i)-4==I(i-4)&&I(i)-5==I(i-5))
                 Ib(n) = I(i);
                 break;
             else 
@@ -176,3 +177,5 @@ ylim([0,0.4])
 xlim([0,1.7])
 xlabel('x (m)')
 ylabel('height (m)')
+outputfilename = append(fffilename,'_analysed','.pdf');
+saveas(gcf,outputfilename)
