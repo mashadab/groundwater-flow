@@ -20,14 +20,14 @@ threshold = 40; %setting the threshold of the image
 W  = 2.54/100;%Width of the acrylic cell (m)
 K  = 0.091;   %For 0.5mm= 0.0024 m/s; 1mm=0.091 m/s; 2mm=0.0285 m/s
 h2 = 0;       %lake level (m)
-Q  = 350;     %Volumetric flow rate (mL/min)
+Q  = 292;     %Volumetric flow rate (mL/min)
 Q  = Q*10^(-6)/60; %converting to m^3/s
 L = (4687-320+1); %length in pixels
 
 %Manually setting the region of importance
 top_height = 323;
 bottom_height = 1125;
-x_origin = 320;
+x_origin = 323;
 x_right  = 4687;
 scale = 160/(4597-310+1);  %conversion from pixels to height in cm (cm/pixel)
 L = L*scale;
@@ -39,7 +39,7 @@ position_timer = [0, 50];   %position of the timer
 
 % Read the video in a standard MATLAB color video format
 folder = fullfile('\Images\1mm\');
-fffilename = '350mL_per_minute_1mm_beads_8_June';
+fffilename = '292mL_per_minute_1mm_beads_8_June';
 baseFileName = sprintf('%s.jpg',fffilename);
 % Get the full filename, with path prepended.
 fullFileName = fullfile(folder, baseFileName);
