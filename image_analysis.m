@@ -21,25 +21,25 @@ W  = 2.54/100;%Width of the acrylic cell (m)
 K  = 0.091;   %For 0.5mm= 0.0024 m/s; 1mm=0.091 m/s; 2mm=0.0285 m/s
 h2 = 0;       %lake level (m)
 %Manually setting the region of importance
-top_height = 640;
+top_height = 850;
 bottom_height = 1125;
-x_origin = 302;
-x_right  = 4661;
+x_origin = 336;
+x_right  = 4680;
 L = (x_right-x_origin+1); %length in pixels
 
-scale = 160/(4575-288+1);  %conversion from pixels to height in cm (cm/pixel)
+scale = 160/(4586-322+1);  %conversion from pixels to height in cm (cm/pixel)
 L = L*scale;
 crop_drop=  [x_origin top_height (x_right - x_origin) (bottom_height - top_height)]; %cropping the drop region: left, top, width, height
 frame_begin = 1;  %starting frame
 frame_end   = 1;   %end frame
 frame_skip = 60;
 
-Q  = 125;     %Volumetric flow rate (mL/min)
+Q  = 25;     %Volumetric flow rate (mL/min)
 Q  = Q*10^(-6)/60; %converting to m^3/s
 
 % Read the video in a standard MATLAB color video format
 folder = fullfile('\Images\1mm\');
-fffilename = '125mL_per_minute_1mm_beads_8_June';
+fffilename = '25mL_per_minute_1mm_beads_8_June';
 baseFileName = sprintf('%s.jpg',fffilename);
 % Get the full filename, with path prepended.
 fullFileName = fullfile(folder, baseFileName);
@@ -90,7 +90,7 @@ J = undistortImage(rgbImage,cameraParams);
 
 %% Step #2 Threshold
 grayImage=rgb2gray(rgbImage);
-grayImage(grayImage<10)=255;
+grayImage(grayImage<20)=255;
 grayImage = 255 - grayImage;
 bwImage = im2bw(grayImage,1-threshold/255);
 
@@ -107,9 +107,9 @@ Ib = ones(size(bwImage,2),1);
 while n < size(bwImage,2)+1
     I = find(bwImage(:,n));
     %I = sort(I,'descend');
-    if (size(I,1) > 10)
+    if (size(I,1) > 6)
         for i=1:size(I,1)-5    %Checking the thickness of the white region to discard the grids 
-            if (I(i)+1==I(i+1)&&I(i)+2==I(i+2)&&I(i)+3==I(i+3)&&I(i)+4==I(i+4)&&I(i)+5==I(i+5)&&I(i)+6==I(i+6)&&I(i)+7==I(i+7)&&I(i)+8==I(i+8))%&&I(i)+9==I(i+9)&&I(i)+10==I(i+10)%&&I(i)+11==I(i+11))%&&I(i)+12==I(i+12)&&I(i)+13==I(i+13)&&I(i)+14==I(i+14)&&I(i)+15==I(i+15)&&I(i)+16==I(i+16))
+            if (I(i)+1==I(i+1)&&I(i)+2==I(i+2)&&I(i)+3==I(i+3)&&I(i)+4==I(i+4)&&I(i)+5==I(i+5))%&&I(i)+6==I(i+6)&&I(i)+7==I(i+7)&&I(i)+8==I(i+8)&&I(i)+9==I(i+9)&&I(i)+10==I(i+10)%&&I(i)+11==I(i+11))%&&I(i)+12==I(i+12)&&I(i)+13==I(i+13)&&I(i)+14==I(i+14)&&I(i)+15==I(i+15)&&I(i)+16==I(i+16))
                 Ii(n) = I(i);
                 break;
             else 
