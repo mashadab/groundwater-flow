@@ -14,19 +14,21 @@ format compact;
 fontSize = 14;
 data = []; %the data will be compiled here
 fps = 60; %frames rate (per second)
-threshold = 40; %setting the threshold of the image
+threshold = 50; %setting the threshold of the image
+threshold_grid = 30; %thresholding to remove the grid
+median_window = 200; %Median window for finding outliers
 
 %Hydraulic conductivity measurement
 W  = 2.54/100;%Width of the acrylic cell (m)
-K  = 0.091;   %For 0.5mm= 0.0024 m/s; 1mm=0.091 m/s; 2mm=0.0285 m/s
+K  = 0.0285;   %For 0.5mm= 0.0024 m/s; 1mm=0.091 m/s; 2mm=0.0285 m/s
 h2 = 0;       %lake level (m)
 %Manually setting the region of importance
-top_height = 850;
-bottom_height = 1125;
-x_origin = 336;
-x_right  = 4680;
-scale_left = 322;
-scale_right= 4586;
+top_height = 550;
+bottom_height = 1100;
+x_origin = 317;
+x_right  = 4290;
+scale_left = 303;
+scale_right= 4209;
 scale_length= 160; %length of the 16 boxes
 
 L = (x_right-x_origin+1); %length in pixels
@@ -38,12 +40,12 @@ frame_begin = 1;  %starting frame
 frame_end   = 1;   %end frame
 frame_skip = 60;
 
-Q  = 25;     %Volumetric flow rate (mL/min)
+Q  = 505;     %Volumetric flow rate (mL/min)
 Q  = Q*10^(-6)/60; %converting to m^3/s
 
 % Read the video in a standard MATLAB color video format
-folder = fullfile('\Images\1mm\');
-fffilename = '25mL_per_minute_1mm_beads_8_June';
+folder = fullfile('\Images\2mm\');
+fffilename = '505mL_per_minute_2mm_beads_9_June';
 baseFileName = sprintf('%s.jpg',fffilename);
 % Get the full filename, with path prepended.
 fullFileName = fullfile(folder, baseFileName);
@@ -94,7 +96,7 @@ J = undistortImage(rgbImage,cameraParams);
 
 %% Step #2 Threshold
 grayImage=rgb2gray(rgbImage);
-grayImage(grayImage<20)=255;
+grayImage(grayImage<threshold_grid)=255;
 grayImage = 255 - grayImage;
 bwImage = im2bw(grayImage,1-threshold/255);
 
@@ -113,7 +115,7 @@ while n < size(bwImage,2)+1
     %I = sort(I,'descend');
     if (size(I,1) > 6)
         for i=1:size(I,1)-5    %Checking the thickness of the white region to discard the grids 
-            if (I(i)+1==I(i+1)&&I(i)+2==I(i+2)&&I(i)+3==I(i+3)&&I(i)+4==I(i+4)&&I(i)+5==I(i+5))%&&I(i)+6==I(i+6)&&I(i)+7==I(i+7)&&I(i)+8==I(i+8)&&I(i)+9==I(i+9)&&I(i)+10==I(i+10)%&&I(i)+11==I(i+11))%&&I(i)+12==I(i+12)&&I(i)+13==I(i+13)&&I(i)+14==I(i+14)&&I(i)+15==I(i+15)&&I(i)+16==I(i+16))
+            if (I(i)+1==I(i+1)&&I(i)+2==I(i+2)&&I(i)+3==I(i+3)&&I(i)+4==I(i+4)&&I(i)+5==I(i+5))%&&I(i)+6==I(i+6))%&&I(i)+7==I(i+7)&&I(i)+8==I(i+8)&&I(i)+9==I(i+9)&&I(i)+10==I(i+10)%&&I(i)+11==I(i+11))%&&I(i)+12==I(i+12)&&I(i)+13==I(i+13)&&I(i)+14==I(i+14)&&I(i)+15==I(i+15)&&I(i)+16==I(i+16))
                 Ii(n) = I(i);
                 break;
             else 
@@ -148,7 +150,7 @@ x     = linspace(1,size(height,2),size(height,2));
 x     = (x-1)*scale;
 height= (Ib - Ii+1)*scale;
 
-TF = find(isoutlier(height,'movmedian',100));
+TF = find(isoutlier(height,'movmedian',median_window));
 height(TF) = NaN;
 
 %// Step #3 Find regions of drops
