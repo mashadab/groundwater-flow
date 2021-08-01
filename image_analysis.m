@@ -13,15 +13,10 @@ format long g;
 format compact;
 fontSize = 14;
 data = []; %the data will be compiled here
-fps = 60; %frames rate (per second)
-threshold = 90; %setting the threshold of the image
-threshold_grid = 25; %thresholding to remove the grid
-median_window = 100; %Median window for finding outliers
 
-%Hydraulic conductivity measurement
-W  = 2.54/100;%Width of the acrylic cell (m)
-K  = 0.0024;   %For 0.5mm= 0.0024 m/s; 1mm=0.091 m/s; 2mm=0.0285 m/s
-h2 = 0;       %lake level (m)
+%%%Thing to change in Step 1
+folder = fullfile('\Images\2mm\');
+fffilename = '1_and_6_tenthsf_mL_per_minute_half_mm_beads_21_June';
 %Manually setting the region of importance
 top_height = 900;
 bottom_height = 1150;
@@ -30,6 +25,20 @@ x_right  = 4635;
 scale_left = 318;
 scale_right= 4548;
 scale_length= 160; %length of the 16 boxes
+Q  = 1.6;     %Volumetric flow rate (mL/min)
+%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%Thing to change in Step 2
+threshold = 90; %setting the threshold of the image
+threshold_grid = 25; %thresholding to remove the grid
+median_window = 100; %Median window for finding outliers
+%%%%%%%%%%%%%%%%%%%%%%%
+
+%Hydraulic conductivity measurement
+W  = 2.54/100;%Width of the acrylic cell (m)
+K  = 0.0024;   %For 0.5mm= 0.0024 m/s; 1mm=0.091 m/s; 2mm=0.0285 m/s
+h2 = 0;        %lake level (m)
+
 
 L = (x_right-x_origin+1); %length in pixels
 
@@ -40,12 +49,9 @@ frame_begin = 1;  %starting frame
 frame_end   = 1;   %end frame
 frame_skip = 60;
 
-Q  = 1.6;     %Volumetric flow rate (mL/min)
 Q  = Q*10^(-6)/60; %converting to m^3/s
 
 % Read the video in a standard MATLAB color video format
-folder = fullfile('\Images\2mm\');
-fffilename = '1_and_6_tenthsf_mL_per_minute_half_mm_beads_21_June';
 baseFileName = sprintf('%s.jpg',fffilename);
 % Get the full filename, with path prepended.
 fullFileName = fullfile(folder, baseFileName);
@@ -72,13 +78,13 @@ ii = 1;
 all = [0 0 0 0]; %initializing the matrix with all the data
 rgbImage1 = imread(fullFileName);
 
-%find the drop location now
+%find the  region of interest
 rgbImage = imcrop(rgbImage1,crop_drop);
 rgbImage_col=rgbImage;
 bwImage=rgb2gray(rgbImage);
 
-%figure()
-%imshow(rgbImage)
+figure()
+imshow(rgbImage1)
 
 %{
 %% Step 1 Get Undistorted image
