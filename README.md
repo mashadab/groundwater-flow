@@ -1,5 +1,5 @@
 # Groundwater flow dynamics, fixed-camera video
-The MATLAB code reads a video frame by frame and digitize it to get free surface height after thresholding for background as well as overlayed mesh..
+ The MATLAB code reads a video frame by frame and digitizes it to get free surface height after thresholding for the background as well as overlayed mesh.
 
 ## Input: 
 Color video .avi (2000X2000 pixels) and associated parameters in the code; Output: Analyzed video and MATLAB data file
