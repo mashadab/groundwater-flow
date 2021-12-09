@@ -1,8 +1,5 @@
 # Groundwater flow dynamics, fixed-camera video
-A MATLAB code which reads numbers in a video, references, and calculates drop dynamics' characteristics 
-
-## Brief summary: 
-The MATLAB code reads a number in a video frame using and converts it to free surface height after thresholding.
+The MATLAB code reads a video frame by frame and digitize it to get free surface height after thresholding for background as well as overlayed mesh..
 
 ## Input: 
 Color video .avi (2000X2000 pixels) and associated parameters in the code; Output: Analyzed video and MATLAB data file
